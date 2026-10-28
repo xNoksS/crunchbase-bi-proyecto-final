@@ -1,0 +1,7 @@
+duckdb
+psycopg[binary]
+python-dotenv
+pandas
+statsmodels
+matplotlib
+jupyter

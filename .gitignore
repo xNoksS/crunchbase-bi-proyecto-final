@@ -1,0 +1,17 @@
+# Credenciales: NUNCA al repo
+.env
+*.env
+!.env.example
+
+# Datos y bases locales
+data/*
+!data/raw/
+data/raw/*
+!data/raw/.gitkeep
+*.duckdb
+*.duckdb.wal
+
+# Python / Jupyter
+__pycache__/
+.venv/
+.ipynb_checkpoints/
