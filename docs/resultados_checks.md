@@ -1,6 +1,6 @@
 # Resultados de checks automatizados
 
-Corrida: 2026-11-01 18:43 | modo: normal | resultado: **FALLA**
+Corrida: 2026-11-01 18:54 | modo: normal | resultado: **FALLA**
 
 | Check | Estado | Detalle |
 |---|---|---|
@@ -68,10 +68,10 @@ Corrida: 2026-11-01 18:43 | modo: normal | resultado: **FALLA**
 | Fecha fuera de rango acquisitions.acquired_at | OK | capa=clean, fuera de [1800-01-01, 2013-12-31]=0 |
 | Fecha fuera de rango ipos.public_at | OK | capa=clean, fuera de [1800-01-01, 2013-12-31]=0 |
 | Fecha fuera de rango funds.funded_at | FALLA | capa=clean, fuera de [1800-01-01, 2013-12-31]=1 |
-| Fecha fuera de rango degrees.graduated_at | FALLA | capa=staging, fuera de [1800-01-01, 2013-12-31]=1 |
-| Fecha fuera de rango relationships.start_at | FALLA | capa=staging, fuera de [1800-01-01, 2013-12-31]=31 |
-| Fecha fuera de rango relationships.end_at | FALLA | capa=staging, fuera de [1800-01-01, 2013-12-31]=65 |
-| Fecha fuera de rango milestones.milestone_at | FALLA | capa=staging, fuera de [1800-01-01, 2013-12-31]=59 |
+| Fecha fuera de rango degrees.graduated_at | AVISO | capa=staging, fuera de [1800-01-01, 2013-12-31]=1 |
+| Fecha fuera de rango relationships.start_at | AVISO | capa=staging, fuera de [1800-01-01, 2013-12-31]=31 |
+| Fecha fuera de rango relationships.end_at | AVISO | capa=staging, fuera de [1800-01-01, 2013-12-31]=65 |
+| Fecha fuera de rango milestones.milestone_at | AVISO | capa=staging, fuera de [1800-01-01, 2013-12-31]=59 |
 | Evento anterior a fundacion funding_rounds.funded_at | FALLA | capa=clean, filas con evento < founded_at=1824 |
 | Evento anterior a fundacion acquisitions.acquired_at | FALLA | capa=clean, filas con evento < founded_at=26 |
 | Evento anterior a fundacion ipos.public_at | FALLA | capa=clean, filas con evento < founded_at=14 |
