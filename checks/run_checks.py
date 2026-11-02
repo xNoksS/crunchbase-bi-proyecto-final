@@ -54,8 +54,10 @@ FKS = [
 ]
 
 # Diferencia esperada de filas clean vs staging, segun docs/bitacora_calidad.md
-# (acquisitions: 1 fila sin FK; ipos: 5 filas sin FK). objects se calcula aparte.
-DELTAS_CLEAN = {"acquisitions": -1, "ipos": -5}
+# Diferencia esperada de filas clean vs staging, segun docs/bitacora_calidad.md
+# (acquisitions: 1 fila sin FK; ipos: 5 filas sin FK; degrees: 554 filas con persona inexistente;
+#  relationships: 920 filas con persona inexistente). objects se calcula aparte.
+DELTAS_CLEAN = {"acquisitions": -1, "ipos": -5, "degrees": -554, "relationships": -920}
 
 # (tabla, FK a objects, columna de fecha del evento): el evento no puede ser anterior a founded_at
 CRUCES_FECHA = [
