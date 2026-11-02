@@ -38,4 +38,8 @@ Una fila por decisión de limpieza. Sin bitácora la limpieza no es auditable.
 
 | 14 | funds | Montos en 6 monedas distintas a USD (268 filas) | 1,564 filas | 1,564 filas; raised\_amount\_usd en 1,129 | Columna `raised\_amount\_usd` solo si la moneda es USD | Mismo criterio de una sola moneda sin inventar tasas | Noel |
 
-
+| 15 | degrees | 554 filas con object_id que no existe en people | 109,610 | 109,056 | Excluir esas filas en clean | Sin persona padre no se pueden unir; si no se excluyen quedan FK huérfanas | Olga |
+| 16 | relationships | 920 filas con person_object_id que no existe en people | 402,878 | 401,958 | Excluir esas filas en clean | clean.objects ya asume esta exclusión: no crea reemplazo para las 285 llaves relationship_object_id que solo aparecen en esas filas | Olga |
+| 17 | degrees, relationships, milestones | Fechas posteriores a 2013-12-31 (medidas en staging): graduated_at 1, start_at 31, end_at 65, milestone_at 59 | iguales | iguales (esos valores pasan a NULL) | Poner NULL, no borrar filas | Los datos terminan en dic. 2013; una fecha posterior es imposible. Confirmar cifras finales con run_checks.py | Olga |
+| 18 | offices | Coordenadas (0, 0) como valor de relleno (completa con el conteo de explorar_ceros.py) | 112,718 | 112,718 | Poner latitude y longitude en NULL solo cuando ambas son 0 | (0, 0) cae en el océano, no es una oficina real; un cero suelto es válido | Olga |
+| 19 | people, milestones, offices | Sin cambios de filas; PK sin nulos ni duplicados | 226,709 / 39,456 / 112,718 | 226,709 / 39,456 / 112,718 | Copiar de staging | Ya cumplen PK y FK contra clean.objects | Olga |
