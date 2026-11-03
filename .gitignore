@@ -11,6 +11,12 @@ data/raw/*
 *.duckdb
 *.duckdb.wal
 
+# Excepción: la serie externa de FRED SÍ se versiona. Es pequeña (288 filas) y
+# el análisis de ciclos de mercado no es reproducible sin ella.
+!data/external/
+!data/external/**
+data/external/*.duckdb
+
 # Python / Jupyter
 __pycache__/
 .venv/
