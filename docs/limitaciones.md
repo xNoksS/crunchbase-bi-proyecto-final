@@ -113,3 +113,52 @@ El mismo sesgo se cuela en el **tiempo a la salida**: la mediana baja en las
 cohortes recientes, pero no porque las empresas salgan más rápido. A una empresa
 de 2011 solo se le pueden ver salidas de menos de tres años, así que las lentas
 quedan fuera del cálculo por definición.
+
+## 5. Valores faltantes y decisiones de limpieza
+
+**Dueño: Olga.**
+
+Los datos de Crunchbase tienen huecos grandes, y cada decisión de limpieza
+(poner NULL, excluir una fila, crear un registro de reemplazo) pudo mover los
+resultados. Cada decisión está documentada en `docs/bitacora_calidad.md`, con
+filas antes y después. Aquí se resume cuáles importan para las conclusiones.
+
+**Evidencia de nuestros datos.**
+
+| Problema | Filas afectadas | Qué hicimos | Bitácora |
+|---|---|---|---|
+| Sin fecha de fundación (`founded_at`) | 98,742 de 463,927 objetos tienen fecha (21%); en los datos originales, el 46% de las empresas | Se conserva NULL | 2 |
+| Eventos anteriores a la fundación | 1,824 rondas, 26 adquisiciones y 14 IPOs, en 1,642 empresas con rondas | `founded_at` a NULL en esas empresas | 21 |
+| Rondas sin fecha (`funded_at`) | 248 (0.47%) | Se conservan, pero quedan fuera de cohortes y de la serie mensual | 7 |
+| Monto en 0 en USD | 6,000 rondas (11.3%) | Ceros a NULL, sin imputar | 5, 8, 11 |
+| Valoración pre-money | solo 31 rondas con valor; post-money, 1,194 | No se usa | 8 |
+| Coordenadas (0, 0) | 80,350 de 112,718 oficinas (71%) | A NULL; se usa `country_code` | 18 |
+| Llaves sin registro padre | 1,276 registros de reemplazo en `objects`; 302 rondas huérfanas suman USD 7.6 mil millones (1.8% del total) | Se conservan con atributos desconocidos | 9 |
+
+**Cómo pudieron cambiar los resultados.**
+1. **Los montos están subestimados.** Los 6,000 ceros se convirtieron en NULL en
+   lugar de imputarse, así que los totales de financiamiento solo suman lo que
+   se reportó y los promedios por ronda se calculan solo sobre las rondas con
+   monto. De esos 6,000, 5,638 no reportaron cifra y 362 (0.68%) tenían monto en
+   otra moneda, sin convertir porque los datos no traen tipos de cambio.
+2. **La decisión de no convertir monedas no es neutral.** Las 362 rondas sin
+   conversión son todas de monedas distintas al dólar (EUR 216, GBP 68, CAD 54,
+   JPY 12, SEK 6, AUD 3, NIS 3). Quedan sin monto justamente las rondas fuera de
+   Estados Unidos, lo que se suma al sesgo geográfico de la sección 6.
+3. **Las cohortes no dependen de la fundación.** Como `founded_at` falta en
+   casi 4 de cada 5 objetos, las cohortes y el tiempo a la salida se miden
+   desde la primera ronda. Quien segmente por año de fundación trabaja con una
+   muestra pequeña y menos representativa.
+4. **Los reemplazos tienen atributos desconocidos.** Los 1,276 registros creados
+   en `objects` no tienen industria ni país, y aparecen como "desconocido" en
+   los cortes por industria y país. Se conservaron porque borrarlos habría
+   quitado rondas e inversiones por USD 7.6 mil millones.
+5. **Efecto pequeño de las exclusiones.** Las filas excluidas por no tener
+   padre (554 de `degrees` y 920 de `relationships`) no entran en ningún análisis
+   de este proyecto, así que no cambian las conclusiones.
+
+**Qué significa para el comité.** Los totales de financiamiento son un piso, no
+la cifra real del mercado, y subestiman más a las empresas fuera de Estados
+Unidos. Ningún análisis de este proyecto depende de la fecha de fundación,
+justo porque es el campo más incompleto. Ninguna decisión de limpieza borró
+datos de monto o de fecha: todas pasan a NULL y se pueden revisar.
