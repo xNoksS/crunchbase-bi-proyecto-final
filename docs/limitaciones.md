@@ -114,6 +114,97 @@ cohortes recientes, pero no porque las empresas salgan más rápido. A una empre
 de 2011 solo se le pueden ver salidas de menos de tres años, así que las lentas
 quedan fuera del cálculo por definición.
 
+---
+
+## 3. Sesgo de supervivencia y de selección
+
+**Dueño: Ximena.**
+
+El dataset no es una muestra del mercado: es lo que Crunchbase alcanzó a
+registrar, y lo que se registra no es aleatorio. Una salida tiene nota de prensa;
+un cierre silencioso no tiene nada, así que la empresa simplemente deja de
+aparecer. El denominador de cualquier tasa de éxito está incompleto hacia el lado
+de los fracasos, y eso **infla** toda tasa que calculemos.
+
+**Evidencia de nuestros datos** (`marts.res_exito_inversionista`,
+`marts.res_benchmark_inversionista`, generadas por
+`notebooks/ximena_analisis_inversionistas.ipynb`):
+
+- De los **16,897** inversionistas con portafolio 2005–2013, solo **2,346**
+  tienen cinco o más empresas. Los otros 14,551 producen tasas que saltan de 0 a
+  100 con una sola salida.
+- Sin filtro de portafolio, los primeros lugares por `diferencia_pp` son
+  inversionistas con **una** empresa, tasa 1.0 y benchmark 0.0: once casos
+  empatados en exactamente **100 puntos porcentuales** sobre su benchmark. No es
+  habilidad, es la aritmética de dividir entre uno.
+- El sesgo de selección también entra por el benchmark: se construye con los
+  **pares registrados** de la misma industria, etapa y cohorte. Si en un segmento
+  Crunchbase documentó mejor a los fondos grandes, el benchmark de ese segmento
+  es el de los fondos grandes, no el del segmento.
+
+**Qué hicimos con eso.**
+1. Umbral de **cinco empresas** para citar cualquier tasa, justificado en la
+   ficha 5 del diccionario y contrastado con umbrales 1, 3, 5, 10 y 20.
+2. El benchmark queda **NULL** cuando no hay otros pares en el segmento; no se
+   imputa cero, que haría ver bien a quien no tiene con quién compararse.
+3. El inversionista evaluado se excluye por completo de sus propios pares, para
+   que un fondo con muchas empresas en un segmento no arrastre su propio
+   benchmark.
+
+**Qué significa para el comité.** Las tasas de salida de este proyecto son
+**cotas superiores**, no estimaciones insesgadas, y la comparación entre
+inversionistas solo es legible por encima del umbral de portafolio. Un
+inversionista con tres empresas y una salida no es mejor que uno con cincuenta y
+diez salidas: es un dato con tres observaciones.
+
+---
+
+## 4. Sensibilidad a las definiciones
+
+**Dueño: Ximena.**
+
+La pregunta del análisis 2 era si cambia la selección de inversionistas al
+cambiar la definición de éxito. La respuesta es **sí**, y está medida, no
+argumentada.
+
+**Evidencia de nuestros datos** (`marts.res_sensibilidad_inversionistas`):
+
+| Mínimo de portafolio | Elegibles V1 | Elegibles V2 | Coincidencias en el Top 10 |
+|---|---|---|---|
+| 1 | 16,897 | 5,463 | 2 de 10 |
+| 3 | 3,788 | 1,503 | 2 de 10 |
+| **5** | **2,346** | **919** | **4 de 10** |
+| 10 | 1,191 | 413 | 5 de 10 |
+| 20 | 547 | 156 | 3 de 10 |
+
+Con el umbral principal de cinco empresas, **solo 4 de los 10 primeros se
+repiten** entre V1 (salida observada hasta 2013) y V2 (salida dentro de cinco
+años, con cohortes maduras). Ninguna de las dos definiciones es incorrecta: miden
+cosas distintas y producen listas distintas.
+
+**Dos efectos que conviene separar.**
+- **Cambia la muestra, no solo el orden.** V2 exige que la primera inversión sea
+  anterior a 2009, así que inversionistas enteros desaparecen del ranking. 500
+  Startups tiene **315 empresas** en portafolio y `tasa_v2` nula: empezó en 2010
+  y no tiene una sola empresa con ventana de cinco años.
+- **Cambia la lectura de un mismo inversionista.** Techstars pasa de **10.8%**
+  (V1) a **36.8%** (V2). El salto no es que mejoró: es que V1 le cuenta en el
+  denominador las 268 empresas de su portafolio, incluidas las recientes que no
+  han tenido tiempo de salir, y V2 solo las 19 que sí lo tuvieron.
+
+**Qué hicimos con eso.**
+1. Se publican **las dos versiones**, nunca una sola presentada como "la" tasa.
+2. Los rankings se comparan sobre un **universo común** de inversionistas, para
+   que la coincidencia no cambie por denominadores distintos.
+3. El umbral de portafolio se reporta junto a cada tabla.
+
+**Qué significa para el comité.** Antes de usar un ranking de inversionistas hay
+que decir cuál definición se usó, porque la lista cambia más de la mitad. La
+recomendación operativa es presentar V2 y V1 juntas y mirar la diferencia contra
+pares comparables (`diferencia_pp`) antes de seleccionar coinversionistas.
+
+---
+
 ## 5. Valores faltantes y decisiones de limpieza
 
 **Dueño: Olga.**

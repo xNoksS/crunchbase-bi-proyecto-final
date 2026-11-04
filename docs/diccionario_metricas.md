@@ -164,6 +164,148 @@ son ceros ni infinitos. Quedan fuera del cálculo y se cuentan aparte en
 
 ---
 
+## 4. Inversionista activo
+
+**Dueño:** Ximena · **Tabla de resultado:** `marts.res_inversionista_activo`
+· **Notebook:** `notebooks/ximena_analisis_inversionistas.ipynb` (secciones 1 y 4)
+
+**Definición en lenguaje de negocio.**
+Un inversionista está **activo** si participó en **al menos una ronda registrada
+entre 2005-01-01 y 2013-12-31**. No es "sigue existiendo": es "aparece
+invirtiendo dentro de la ventana que el dataset cubre bien".
+
+**Fórmula.**
+```python
+act = participaciones[participaciones.fecha >= pd.Timestamp('2005-01-01')]
+actividad = act.groupby('inversionista_id').agg(
+    rondas_activas   = ('ronda_id',   'nunique'),
+    empresas_activas = ('empresa_id', 'nunique'),
+    primera_ronda    = ('fecha',      'min'),
+    ultima_ronda     = ('fecha',      'max'))
+```
+
+**Tablas y campos.** `marts.puente_ronda_inversionista` (`inversionista_id`,
+`ronda_id`, `peso`), `marts.fact_rondas` (`empresa_id`, `fecha`, `monto_usd`),
+`marts.dim_inversionista` (`nombre`, `tipo_inversionista`, `pais`).
+
+**Portafolio = empresas distintas.** No participaciones ni rondas. Un
+inversionista que entró en cinco rondas de la misma empresa tiene portafolio de
+**una**, no de cinco. Eso es lo que evita que un inversionista de seguimiento
+parezca diversificado.
+
+**Tratamiento de nulos y casos especiales.**
+- Las participaciones se leen con `DISTINCT`: el puente puede repetir el par
+  inversionista–ronda y se contaría doble.
+- Las rondas sin fecha quedan fuera; no se pueden ubicar en la ventana.
+- `monto_usd × peso` es una **distribución contable**, no capital efectivamente
+  aportado. No se usa para rankear habilidad.
+
+**Cifras de control.** 79,206 participaciones · 16,897 inversionistas ·
+21,327 empresas · 63,235 pares únicos inversionista–empresa.
+
+**Limitaciones conocidas.**
+1. "Activo" depende del registro, no de la actividad real: un fondo que invirtió
+   fuera de lo que Crunchbase documenta aparece como inactivo.
+2. Los 16,897 son activos **en algún momento de nueve años**, no activos al
+   final de la ventana.
+3. El corte de 2005 hereda el problema de cobertura de la sección 1 de
+   `docs/limitaciones.md`.
+
+---
+
+## 5. Éxito de un inversionista (dos versiones)
+
+**Dueño:** Ximena · **Tabla de resultado:** `marts.res_exito_inversionista`
+· **Notebook:** `notebooks/ximena_analisis_inversionistas.ipynb` (sección 5)
+
+**Definición en lenguaje de negocio.**
+Qué proporción de las empresas de su portafolio tuvo una salida. Se publican
+**dos versiones a propósito**, porque la respuesta cambia según cuál se use.
+
+| | V1 — salida observada | V2 — salida a 5 años |
+|---|---|---|
+| Qué cuenta | adquisición o IPO posterior a la primera inversión, hasta 2013-12-31 | salida dentro de **5 años** de la primera inversión |
+| Qué empresas entran | todas las del portafolio | solo primeras inversiones **hasta 2008-12-31** |
+| Para qué sirve | aprovecha todo el dato disponible | garantiza que toda empresa tuvo 5 años de observación |
+| Qué sesgo trae | favorece inversiones viejas, que llevan más ventana | pierde todo lo invertido después de 2008 |
+
+**Fórmula.**
+```python
+tasa_v1 = exitos_v1 / n_empresas       # n_empresas   = empresas distintas
+tasa_v2 = exitos_v2 / elegibles_v2     # elegibles_v2 = primera inversion <= 2008-12-31
+```
+
+**Tablas y campos.** `marts.met_salida_empresa` (`fecha_primera_salida`), más las
+de la sección 4. La salida solo cuenta si es **posterior** a la primera inversión
+de ese inversionista en esa empresa.
+
+**Umbral mínimo de portafolio: 5 empresas.** Con cinco empresas una salida vale
+**20 puntos porcentuales**; con una empresa vale 100. Es un filtro operativo, no
+una garantía estadística, y por eso se contrasta con umbrales 1, 3, 5, 10 y 20
+en `marts.res_sensibilidad_inversionistas`. En V2 se exigen cinco empresas **con
+ventana completa de observación**.
+
+**Tratamiento de nulos y casos especiales.**
+- `tasa_v2` queda **NULL**, no cero, cuando el inversionista no tiene ninguna
+  empresa con ventana completa (`elegibles_v2 = 0`). Caso real: 500 Startups,
+  315 empresas en portafolio, `tasa_v2` nula porque empezó en 2010.
+- Los rankings V1 y V2 se comparan sobre un **universo común** de inversionistas,
+  nunca sobre dos listas con denominadores distintos.
+
+**Limitaciones conocidas.**
+1. **Salida ≠ retorno.** Una adquisición de rescate cuenta igual que una de mil
+   millones. No mide rentabilidad ni demuestra habilidad causal.
+2. **V1 está censurada:** las salidas lentas de inversiones recientes todavía no
+   ocurrieron dentro del dataset.
+3. **V2 cambia la muestra, no solo la métrica:** de 16,897 inversionistas, solo
+   5,463 tienen alguna empresa elegible y 919 llegan a cinco.
+4. El Top 10 depende de la versión: **coinciden 4 de 10** (ver la sección 4 de
+   `docs/limitaciones.md`).
+
+---
+
+## 6. Benchmark de inversionista
+
+**Dueño:** Ximena · **Tabla de resultado:** `marts.res_benchmark_inversionista`
+· **Notebook:** `notebooks/ximena_analisis_inversionistas.ipynb` (sección 6)
+
+**Definición en lenguaje de negocio.**
+La tasa de salida **promedio de los demás inversionistas** que invirtieron en la
+misma **industria + etapa + cohorte de primera inversión**. Sirve para separar
+*habilidad* de *haberle atinado al sector y al año*: un 25% en software semilla
+de 2007 no significa lo mismo que un 25% en biotech.
+
+**Fórmula.**
+```python
+benchmark_tasa_v1 = (suma de tasa_v1 de los pares del segmento - la propia)
+                    / (pares del segmento - los propios)
+diferencia_pp     = (tasa_v1 - benchmark_tasa_v1) * 100
+```
+El inversionista evaluado se **excluye por completo** de sus propios pares
+(`pares_otros = pares - pares_propios`), para que no se compare contra sí mismo.
+
+**Tablas y campos.** `marts.dim_empresa` (`industria`, `etapa`) cruzada contra el
+portafolio de la sección 4, más `tasa_v1` de la sección 5.
+
+**Tratamiento de nulos y casos especiales.**
+- Si un segmento no tiene **otros** inversionistas, el benchmark queda **NULL**.
+  No se imputa cero: un cero haría ver al inversionista infinitamente mejor que
+  un benchmark que en realidad no existe.
+- `segmentos_comparables` publica sobre cuántos segmentos se construyó el
+  promedio, para que se vea cuándo descansa en uno solo.
+
+**Limitaciones conocidas.**
+1. **No controla lo no observado.** Industria, etapa y cohorte ayudan, pero no
+   igualan calidad del equipo, geografía ni acceso al deal.
+2. **`etapa` puede ser posterior a la inversión.** Es la etapa registrada en la
+   dimensión, no necesariamente la que tenía la empresa cuando entró el dinero.
+3. **Con portafolios de una empresa el indicador se rompe.** Sin filtrar, los
+   primeros lugares por `diferencia_pp` son inversionistas con **una** empresa,
+   tasa 1.0 y benchmark 0.0, es decir `diferencia_pp = 100`. Por eso el benchmark
+   solo se lee junto con el umbral de portafolio de la sección 5.
+
+---
+
 ## 7. Tasa de salida por segmento, con plazo observable
 
 **Dueño:** Jose · **Tabla de resultado:** `marts.dash_industria_etapa`
