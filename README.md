@@ -18,7 +18,11 @@ Equipo de BI de un fondo de venture capital. Entrega: jueves 5 de noviembre de 2
 1. `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`
 2. Colocar los CSV originales de Crunchbase en `data/raw/` (no se suben al repo).
 3. `python run_all.py` ejecuta raw → staging → clean → marts y luego los checks.
-4. Copiar `.env.example` a `.env`, llenar TU rol de Neon y correr `python publish/publish_to_neon.py`.
+4. Correr los notebooks de `notebooks/` **antes de publicar**: escriben sus tablas
+   de resultados (`marts.res_*`) en la misma base DuckDB. `run_all.py` recrea la
+   base desde cero, así que el orden siempre es
+   `run_all.py` → notebooks → `publish_to_neon.py`.
+5. Copiar `.env.example` a `.env`, llenar TU rol de Neon y correr `python publish/publish_to_neon.py`.
 
 ## Estructura
 
@@ -27,6 +31,9 @@ Equipo de BI de un fondo de venture capital. Entrega: jueves 5 de noviembre de 2
 - `docs/`: bitácora de calidad, decisiones, diccionario del modelo y de métricas.
 - `notebooks/`: análisis (curvas de salida, sensibilidad de inversionistas, ciclos de mercado).
 - `dashboard/`: archivo del dashboard y capturas.
+- `data/external/`: serie externa mensual de FRED para el análisis de ciclos de
+  mercado. **Sí** se versiona (excepción en `.gitignore`); fuente, frecuencia y
+  periodo documentados en `data/external/README.md`.
 
 ## Flujo de trabajo
 
