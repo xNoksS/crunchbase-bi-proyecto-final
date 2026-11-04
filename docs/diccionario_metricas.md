@@ -161,3 +161,69 @@ son ceros ni infinitos. Quedan fuera del cálculo y se cuentan aparte en
    pueden tener una "primera ronda" posterior a la real, lo que acorta el tiempo
    medido.
 4. No distingue salida planeada de venta forzada.
+
+---
+
+## 7. Tasa de salida por segmento, con plazo observable
+
+**Dueño:** Jose · **Tabla de resultado:** `marts.dash_industria_etapa`
+· **SQL:** `sql/04_marts/21_dash_industrias.sql` · **Medidas:** `dashboard/medidas_dax.md`, sección 2
+
+**Definición en lenguaje de negocio.**
+De las empresas de un segmento (industria, país, etapa de entrada, cohorte) que
+ya tuvieron tiempo de cumplir H años desde su primera ronda, qué porcentaje tuvo
+una salida (§2) dentro de esos H años. Es la misma tasa de las curvas de salida
+(análisis 1), abierta por segmento para el dashboard.
+
+**Fórmula.**
+```sql
+SUM(salidas_5a) / SUM(observables_5a)          -- nunca el promedio de tasas
+-- observable a H anios:  fecha_primera_ronda + H anios <= 2013-12-31
+-- salida valida:         fecha_primera_salida >= fecha_primera_ronda
+```
+
+**Tablas y campos.** `marts.met_financiamiento_empresa` (`tipo_primera_ronda`,
+`cohorte_primera_ronda`, `fecha_primera_ronda`), `marts.met_salida_empresa`
+(`fecha_primera_salida`, `tuvo_salida_con_monto`).
+
+**Tratamiento de nulos y casos especiales.**
+- Etapa de entrada = tipo de la **primera** ronda. No se usa `dim_empresa.etapa`,
+  que es la **última** ronda y por lo tanto contiene información del futuro.
+- 202 empresas tienen su primera salida **antes** de su primera ronda registrada
+  (134 IPOs con rondas post-IPO y 68 adquisiciones). No cuentan como salida de
+  esa cohorte.
+- Solo cohortes 2005-2013 y sin registros de reemplazo (`es_registro_faltante`).
+- El dashboard oculta tasas calculadas sobre menos de 100 empresas observables.
+
+**Limitaciones conocidas.** Las mismas de §2. Además, con celdas chicas
+(industria × país × etapa × cohorte) la tasa solo es legible al agregar.
+
+## 8. Exceso sobre el benchmark (implementación del §6 en el dashboard)
+
+**Dueño:** Jose, sobre la definición de Ximena · **Tabla de resultado:**
+`marts.dash_portafolio`, `marts.dash_inversionista` · **SQL:**
+`sql/04_marts/20_dash_inversionistas.sql`
+
+**Definición en lenguaje de negocio.**
+Cuántos puntos porcentuales por encima (o por debajo) de lo esperado está la tasa
+de éxito de un inversionista, donde "lo esperado" es la tasa de las empresas que
+levantaron una ronda del mismo tipo, en la misma industria y el mismo año en que
+él entró.
+
+**Fórmula.**
+```sql
+exceso_v1 = exitos_v1 / n_empresas - AVG(bench_v1)    -- por inversionista
+-- bench_v1 de cada par = tasa V1 de la celda industria x etapa x anio de entrada
+-- si la celda tiene menos de 10 empresas, se usa la celda etapa x anio
+```
+
+**Tratamiento de nulos.** Participaciones sin fecha de ronda quedan fuera (no se
+puede ubicar la entrada). Ninguna suma de montos pasa por el puente.
+
+**Limitaciones conocidas.**
+1. La mayoría de los inversionistas grandes supera su benchmark (119 de 146 con
+   al menos 50 empresas): las empresas con inversionistas registrados están mejor
+   documentadas. Sirve para **comparar inversionistas entre sí**, no para decir que
+   le ganan al mercado.
+2. El benchmark incluye a la propia empresa del inversionista; en celdas chicas
+   eso acerca el benchmark a su tasa.
