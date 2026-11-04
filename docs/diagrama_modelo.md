@@ -1,140 +1,78 @@
-\# Diagrama del modelo dimensional (esquema `marts`)
-
-
+# Diagrama del modelo dimensional (esquema `marts`)
 
 ```mermaid
-
 erDiagram
+    dim_empresa ||--o{ fact_rondas : "levanta"
+    dim_empresa ||--o{ fact_adquisiciones : "es adquirida"
+    dim_empresa ||--o{ fact_adquisiciones : "adquiere"
+    dim_empresa ||--o{ fact_ipos : "sale a bolsa"
+    dim_fecha ||--o{ fact_rondas : "fecha"
+    dim_fecha ||--o{ fact_adquisiciones : "fecha"
+    dim_fecha ||--o{ fact_ipos : "fecha"
+    fact_rondas ||--|{ puente_ronda_inversionista : "tiene"
+    dim_inversionista ||--|{ puente_ronda_inversionista : "participa"
+    serie_externa_mensual ||--o{ dim_fecha : "anio_mes"
 
-&#x20;   dim\_empresa ||--o{ fact\_rondas : "levanta"
-
-&#x20;   dim\_empresa ||--o{ fact\_adquisiciones : "es adquirida"
-
-&#x20;   dim\_empresa ||--o{ fact\_adquisiciones : "adquiere"
-
-&#x20;   dim\_empresa ||--o{ fact\_ipos : "sale a bolsa"
-
-&#x20;   dim\_fecha ||--o{ fact\_rondas : "fecha"
-
-&#x20;   dim\_fecha ||--o{ fact\_adquisiciones : "fecha"
-
-&#x20;   dim\_fecha ||--o{ fact\_ipos : "fecha"
-
-&#x20;   fact\_rondas ||--|{ puente\_ronda\_inversionista : "tiene"
-
-&#x20;   dim\_inversionista ||--|{ puente\_ronda\_inversionista : "participa"
-
-
-
-&#x20;   dim\_empresa {
-
-&#x20;       varchar empresa\_id PK
-
-&#x20;       varchar nombre
-
-&#x20;       varchar industria
-
-&#x20;       varchar pais
-
-&#x20;       varchar estatus
-
-&#x20;       bigint anio\_fundacion
-
-&#x20;       bigint anio\_primera\_ronda
-
-&#x20;       varchar etapa
-
-&#x20;       boolean es\_registro\_faltante
-
-&#x20;   }
-
-&#x20;   dim\_inversionista {
-
-&#x20;       varchar inversionista\_id PK
-
-&#x20;       varchar nombre
-
-&#x20;       varchar tipo\_inversionista
-
-&#x20;       varchar pais
-
-&#x20;       boolean es\_registro\_faltante
-
-&#x20;   }
-
-&#x20;   dim\_fecha {
-
-&#x20;       date fecha PK
-
-&#x20;       smallint anio
-
-&#x20;       smallint trimestre
-
-&#x20;       smallint mes
-
-&#x20;       date anio\_mes
-
-&#x20;   }
-
-&#x20;   fact\_rondas {
-
-&#x20;       int ronda\_id PK
-
-&#x20;       varchar empresa\_id FK
-
-&#x20;       date fecha FK
-
-&#x20;       varchar tipo\_ronda
-
-&#x20;       decimal monto\_usd
-
-&#x20;       bigint n\_inversionistas
-
-&#x20;   }
-
-&#x20;   puente\_ronda\_inversionista {
-
-&#x20;       int ronda\_id PK,FK
-
-&#x20;       varchar inversionista\_id PK,FK
-
-&#x20;       double peso
-
-&#x20;   }
-
-&#x20;   fact\_adquisiciones {
-
-&#x20;       int adquisicion\_id PK
-
-&#x20;       varchar empresa\_adquirida\_id FK
-
-&#x20;       varchar empresa\_adquirente\_id FK
-
-&#x20;       date fecha FK
-
-&#x20;       decimal precio\_usd
-
-&#x20;   }
-
-&#x20;   fact\_ipos {
-
-&#x20;       int ipo\_id PK
-
-&#x20;       varchar empresa\_id FK
-
-&#x20;       date fecha FK
-
-&#x20;   }
-
+    dim_empresa {
+        varchar empresa_id PK
+        varchar nombre
+        varchar industria
+        varchar pais
+        varchar estatus
+        bigint anio_fundacion
+        bigint anio_primera_ronda
+        varchar etapa
+        boolean es_registro_faltante
+    }
+    dim_inversionista {
+        varchar inversionista_id PK
+        varchar nombre
+        varchar tipo_inversionista
+        varchar pais
+        boolean es_registro_faltante
+    }
+    dim_fecha {
+        date fecha PK
+        smallint anio
+        smallint trimestre
+        smallint mes
+        date anio_mes
+    }
+    fact_rondas {
+        int ronda_id PK
+        varchar empresa_id FK
+        date fecha FK
+        varchar tipo_ronda
+        decimal monto_usd
+        bigint n_inversionistas
+    }
+    puente_ronda_inversionista {
+        int ronda_id PK,FK
+        varchar inversionista_id PK,FK
+        double peso
+    }
+    fact_adquisiciones {
+        int adquisicion_id PK
+        varchar empresa_adquirida_id FK
+        varchar empresa_adquirente_id FK
+        date fecha FK
+        decimal precio_usd
+    }
+    fact_ipos {
+        int ipo_id PK
+        varchar empresa_id FK
+        date fecha FK
+    }
+    serie_externa_mensual {
+        date anio_mes PK
+        double nasdaqcom
+        double fedfunds
+        double unrate
+    }
 ```
 
-
-
-Granos: `fact\_rondas` = una ronda · `fact\_adquisiciones` = una adquisición ·
-
-`fact\_ipos` = una IPO · `puente\_ronda\_inversionista` = un par (ronda, inversionista).
-
-El monto solo vive en `fact\_rondas`; el puente reparte con `peso`.
-
-Detalle de columnas en `diccionario\_modelo.md`.
-
+Granos: `fact_rondas` = una ronda · `fact_adquisiciones` = una adquisición ·
+`fact_ipos` = una IPO · `puente_ronda_inversionista` = un par (ronda, inversionista) ·
+`serie_externa_mensual` = un mes.
+El monto solo vive en `fact_rondas`; el puente reparte con `peso`.
+Detalle de columnas en `diccionario_modelo.md`.
