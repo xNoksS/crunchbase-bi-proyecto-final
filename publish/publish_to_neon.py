@@ -29,6 +29,31 @@ PKS = {
     "puente_ronda_inversionista": ["ronda_id", "inversionista_id"],
     "fact_adquisiciones": ["adquisicion_id"],
     "fact_ipos": ["ipo_id"],
+    # metricas (Hugo, sql/04_marts/09-10)
+    "met_financiamiento_empresa": ["empresa_id"],
+    "met_financiamiento_mensual": ["anio_mes"],
+    "met_financiamiento_industria_anio": ["industria", "anio"],
+    "met_salida_empresa": ["empresa_id"],
+    "serie_externa_mensual": ["anio_mes"],
+    # resultados de los analisis (SQL 11 y notebooks de Hugo)
+    "res_curvas_salida": ["cohorte", "horizonte_anios"],
+    "res_tiempo_salida_cohorte": ["cohorte"],
+    "res_sensibilidad_exito": ["horizonte_anios"],
+    "res_sensibilidad_exito_cohorte": ["cohorte", "horizonte_anios"],
+    "res_cobertura_cohortes": ["cohorte"],
+    "res_cobertura_anual": ["anio"],
+    "res_ciclos_mercado_coef": ["modelo", "termino"],
+    "res_ciclos_mercado_panel": ["anio_mes"],
+    "res_ciclos_mercado_rezagos": ["rezago_meses"],
+    # tablas del dashboard (Jose, sql/04_marts/20-21)
+    "dash_portafolio": ["inversionista_id", "empresa_id"],
+    "dash_inversionista": ["inversionista_id"],
+    "dash_sensibilidad_top10": ["minimo_empresas"],
+    "dash_industria_etapa": ["industria", "pais", "etapa_entrada", "cohorte"],
+    "dash_dim_industria": ["industria"],
+    "dash_dim_etapa": ["etapa"],
+    "dash_dim_pais": ["pais"],
+    "dash_dim_cohorte": ["cohorte"],
 }
 
 # Indices para acelerar los JOIN y filtros del dashboard.
@@ -38,12 +63,19 @@ INDICES = {
     "fact_adquisiciones": ["empresa_adquirida_id", "empresa_adquirente_id", "fecha"],
     "fact_ipos": ["empresa_id", "fecha"],
     "dim_empresa": ["industria", "pais"],
+    "dash_portafolio": ["empresa_id", "industria"],
+    "dash_industria_etapa": ["industria", "cohorte"],
 }
 
 TIPOS = {
     "BIGINT": "bigint", "INTEGER": "integer", "SMALLINT": "smallint",
     "VARCHAR": "text", "DOUBLE": "double precision", "FLOAT": "real",
     "DATE": "date", "TIMESTAMP": "timestamp", "BOOLEAN": "boolean",
+    # tipos que aparecen en tablas creadas desde pandas o con SUM() en DuckDB
+    "HUGEINT": "numeric(38,0)", "UBIGINT": "numeric(20,0)", "UINTEGER": "bigint",
+    "USMALLINT": "integer", "TINYINT": "smallint", "UTINYINT": "smallint",
+    "TIMESTAMP_NS": "timestamp", "TIMESTAMP_MS": "timestamp", "TIMESTAMP_S": "timestamp",
+    "TIMESTAMP WITH TIME ZONE": "timestamptz",
 }
 
 
@@ -120,7 +152,7 @@ def main():
             todo_ok &= publicar(origen, pg, "marts", tabla, rol)
         with pg.cursor() as cur:
             cur.execute("select pg_size_pretty(pg_database_size(current_database()))")
-            print("Tamano de la base en Neon:", cur.fetchone()[0], "(limite del plan gratuito: 1 GB)")
+            print("Tamano de la base en Neon:", cur.fetchone()[0], "(limite del plan gratuito: 0.5 GB)")
     if not todo_ok:
         sys.exit("Alguna tabla no coincide con DuckDB: revisar antes de entregar.")
 
