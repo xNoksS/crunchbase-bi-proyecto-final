@@ -43,4 +43,16 @@ Equipo de BI de un fondo de venture capital. Entrega: jueves 5 de noviembre de 2
 
 ## Uso de herramientas de IA
 
-<!-- Declarar brevemente para qué y con qué herramienta (requisito de entrega). -->
+Todo el equipo usó asistentes de IA como **guía de trabajo**, no como sustituto de nuestro criterio. La declaración detallada de cada integrante está en su archivo individual (por ejemplo `README_Noel.md` y `README_uso_IA_Ximena.md`), con la herramienta que usó y para qué.
+
+**Para qué se usó**
+- Orientarnos paso a paso: en qué orden construir el pipeline, cómo trabajar con Git y cómo configurar Neon.
+- Proponer borradores de SQL, código y documentación, que cada quien ejecutó, revisó y ajustó.
+- Revisar el trabajo del equipo y preparar la defensa (resúmenes y preguntas de práctica).
+
+**Cómo se tomaron las decisiones**
+- Las decisiones de diseño y de calidad de datos las tomamos como equipo, a partir de lo que mostraban los datos y de lo que íbamos discutiendo. La IA presentaba opciones y nosotros elegíamos.
+- El proceso fue iterativo: se ejecutaba cada paso, se revisaba el resultado y se corregía con ese feedback.
+- Las cifras citadas en la documentación fueron comprobadas por nosotros en la base de datos y en el repositorio.
+
+**Qué no hizo la IA:** no tuvo acceso a nuestras credenciales ni a la base de datos, y no fusionó cambios al repositorio.
